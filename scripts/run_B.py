@@ -5,7 +5,7 @@ OUTPUT_FILE = "results/benchmark_B.csv"
 
 VERTEX_COUNT = 150
 DENSITIES = [25, 50, 99]
-ITERATIONS = 50
+ITERATIONS = 100
 
 PROBLEMS = [
     0,  # MST
