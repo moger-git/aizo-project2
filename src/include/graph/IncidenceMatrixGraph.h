@@ -1,17 +1,44 @@
 #ifndef AIZO_PROJECT2_INCIDENCEMATRIXGRAPH_H
 #define AIZO_PROJECT2_INCIDENCEMATRIXGRAPH_H
+
 #include <iostream>
 
 class IncidenceMatrixGraph {
+    
     int vertexCount;
     int edgeCapacity;
     int edgeCount;
+
     int** matrix;
     int* weights;
 
+    bool areEdgeParametersValid(
+        const int from,
+        const int to,
+        const int weight
+    ) const {
+        return from >= 0 &&
+               from < vertexCount &&
+               to >= 0 &&
+               to < vertexCount &&
+               weight >= 0 &&
+               edgeCount < edgeCapacity;
+    }
+
 public:
-    IncidenceMatrixGraph(int vertices, int edges)
-        : vertexCount(vertices), edgeCapacity(edges), edgeCount(0) {
+    IncidenceMatrixGraph(
+        const int vertices,
+        const int edges
+    )
+        : vertexCount(vertices),
+          edgeCapacity(edges),
+          edgeCount(0),
+          matrix(nullptr),
+          weights(nullptr) {
+        if (vertexCount <= 0 || edgeCapacity < 0) {
+            return;
+        }
+
         matrix = new int*[vertexCount];
 
         for (int i = 0; i < vertexCount; ++i) {
@@ -30,34 +57,51 @@ public:
     }
 
     ~IncidenceMatrixGraph() {
-        for (int i = 0; i < vertexCount; ++i) {
-            delete[] matrix[i];
+        if (matrix != nullptr) {
+            for (int i = 0; i < vertexCount; ++i) {
+                delete[] matrix[i];
+            }
+
+            delete[] matrix;
         }
 
-        delete[] matrix;
         delete[] weights;
     }
 
-    void addDirectedEdge(int from, int to, int weight) {
-        if (edgeCount >= edgeCapacity) {
-            return;
+    bool addDirectedEdge(
+        const int from,
+        const int to,
+        const int weight
+    ) {
+        if (!areEdgeParametersValid(from, to, weight)) {
+            return false;
         }
 
         matrix[from][edgeCount] = -1;
         matrix[to][edgeCount] = 1;
         weights[edgeCount] = weight;
+
         ++edgeCount;
+
+        return true;
     }
 
-    void addUndirectedEdge(int from, int to, int weight) {
-        if (edgeCount >= edgeCapacity) {
-            return;
+    bool addUndirectedEdge(
+        const int from,
+        const int to,
+        const int weight
+    ) {
+        if (!areEdgeParametersValid(from, to, weight)) {
+            return false;
         }
 
         matrix[from][edgeCount] = 1;
         matrix[to][edgeCount] = 1;
         weights[edgeCount] = weight;
+
         ++edgeCount;
+
+        return true;
     }
 
     int getVertexCount() const {
@@ -68,7 +112,10 @@ public:
         return edgeCount;
     }
 
-    int getMatrixValue(const int vertex, const int edge) const {
+    int getMatrixValue(
+        const int vertex,
+        const int edge
+    ) const {
         return matrix[vertex][edge];
     }
 
@@ -89,4 +136,4 @@ public:
     }
 };
 
-#endif //AIZO_PROJECT2_INCIDENCEMATRIXGRAPH_H
+#endif // AIZO_PROJECT2_INCIDENCEMATRIXGRAPH_H

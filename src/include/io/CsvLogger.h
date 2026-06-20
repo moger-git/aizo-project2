@@ -1,9 +1,11 @@
 #ifndef AIZO_PROJECT2_CSV_LOGGER_H
 #define AIZO_PROJECT2_CSV_LOGGER_H
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <system_error>
 
 struct BenchmarkResult {
     std::string date;
@@ -13,7 +15,7 @@ struct BenchmarkResult {
 
     int vertexCount;
     int edgeCount;
-    int density;
+    double density;
     int iterations;
 
     long long minTimeUs;
@@ -22,23 +24,65 @@ struct BenchmarkResult {
 };
 
 class CsvLogger {
-public:
-    static bool writeHeaderIfNeeded(const std::string& filePath) {
-        std::ifstream input(filePath);
+    // Tworzy katalog nadrzedny pliku wynikowego
+    static bool createParentDirectory(const std::string& filePath) {
+        const std::filesystem::path path(filePath);
+        const std::filesystem::path parentPath = path.parent_path();
 
-        const bool fileExists = input.good();
-        const bool fileIsEmpty = input.peek() == std::ifstream::traits_type::eof();
-
-        input.close();
-
-        if (fileExists && !fileIsEmpty) {
+        if (parentPath.empty()) {
             return true;
         }
 
-        std::ofstream output(filePath);
+        std::error_code error;
+
+        std::filesystem::create_directories(parentPath, error);
+
+        if (error) {
+            std::cout
+                << "Error: cannot create directory: "
+                << parentPath.string()
+                << ". Reason: "
+                << error.message()
+                << "\n";
+
+            return false;
+        }
+
+        return true;
+    }
+
+public:
+
+    // Zapisuje naglowek CSV
+    static bool writeHeaderIfNeeded(const std::string& filePath) {
+        if (!createParentDirectory(filePath)) {
+            return false;
+        }
+
+        std::ifstream input(filePath);
+
+        if (input.is_open()) {
+            const bool fileIsEmpty =
+                input.peek() == std::ifstream::traits_type::eof();
+
+            input.close();
+
+            if (!fileIsEmpty) {
+                return true;
+            }
+        }
+
+        std::ofstream output(
+            filePath,
+            std::ios::out | std::ios::trunc
+        );
 
         if (!output.is_open()) {
-            std::cout << "Error: cannot open CSV file: " << filePath << "\n";
+            std::cout
+                << "Error: cannot open CSV file for writing: "
+                << filePath
+                << "\n";
+
             return false;
         }
 
@@ -54,10 +98,33 @@ public:
                << "maxTimeUs;"
                << "avgTimeUs\n";
 
+        output.flush();
+
+        if (!output.good()) {
+            std::cout
+                << "Error: cannot write CSV header to file: "
+                << filePath
+                << "\n";
+
+            output.close();
+            return false;
+        }
+
         output.close();
+
+        if (output.fail()) {
+            std::cout
+                << "Error: cannot close CSV file correctly: "
+                << filePath
+                << "\n";
+
+            return false;
+        }
+
         return true;
     }
 
+    // Dopisuje jeden wynik benchmarku do pliku CSV
     static bool appendResult(
         const std::string& filePath,
         const BenchmarkResult& result
@@ -69,7 +136,11 @@ public:
         std::ofstream output(filePath, std::ios::app);
 
         if (!output.is_open()) {
-            std::cout << "Error: cannot open CSV file: " << filePath << "\n";
+            std::cout
+                << "Error: cannot open CSV file for appending: "
+                << filePath
+                << "\n";
+
             return false;
         }
 
@@ -85,9 +156,31 @@ public:
                << result.maxTimeUs << ";"
                << result.avgTimeUs << "\n";
 
+        output.flush();
+
+        if (!output.good()) {
+            std::cout
+                << "Error: cannot write benchmark result to CSV file: "
+                << filePath
+                << "\n";
+
+            output.close();
+            return false;
+        }
+
         output.close();
+
+        if (output.fail()) {
+            std::cout
+                << "Error: cannot close CSV file correctly: "
+                << filePath
+                << "\n";
+
+            return false;
+        }
+
         return true;
     }
 };
 
-#endif //AIZO_PROJECT2_CSV_LOGGER_H
+#endif // AIZO_PROJECT2_CSV_LOGGER_H

@@ -2,12 +2,12 @@
 #define AIZO_PROJECT2_GRAPHBUILDER_H
 
 #include "graph/AdjacencyListGraph.h"
+#include "graph/GraphData.h"
 #include "graph/IncidenceMatrixGraph.h"
-#include "io/GraphLoader.h"
 
 class GraphBuilder {
 public:
-    static void buildAdjacencyListGraph(
+    static bool buildAdjacencyListGraph(
         const GraphData& data,
         AdjacencyListGraph& graph,
         const bool undirected
@@ -17,15 +17,31 @@ public:
             const int to = data.edges[i].to;
             const int weight = data.edges[i].weight;
 
+            bool edgeAdded = false;
+
             if (undirected) {
-                graph.addUndirectedEdge(from, to, weight);
+                edgeAdded = graph.addUndirectedEdge(
+                    from,
+                    to,
+                    weight
+                );
             } else {
-                graph.addDirectedEdge(from, to, weight);
+                edgeAdded = graph.addDirectedEdge(
+                    from,
+                    to,
+                    weight
+                );
+            }
+
+            if (!edgeAdded) {
+                return false;
             }
         }
+
+        return true;
     }
 
-    static void buildIncidenceMatrixGraph(
+    static bool buildIncidenceMatrixGraph(
         const GraphData& data,
         IncidenceMatrixGraph& graph,
         const bool undirected
@@ -35,13 +51,29 @@ public:
             const int to = data.edges[i].to;
             const int weight = data.edges[i].weight;
 
+            bool edgeAdded = false;
+
             if (undirected) {
-                graph.addUndirectedEdge(from, to, weight);
+                edgeAdded = graph.addUndirectedEdge(
+                    from,
+                    to,
+                    weight
+                );
             } else {
-                graph.addDirectedEdge(from, to, weight);
+                edgeAdded = graph.addDirectedEdge(
+                    from,
+                    to,
+                    weight
+                );
+            }
+
+            if (!edgeAdded) {
+                return false;
             }
         }
+
+        return true;
     }
 };
 
-#endif //AIZO_PROJECT2_GRAPHBUILDER_H
+#endif // AIZO_PROJECT2_GRAPHBUILDER_H

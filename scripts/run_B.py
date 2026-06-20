@@ -1,4 +1,6 @@
 import subprocess
+from pathlib import Path
+
 
 EXECUTABLE = "./cmake-build-debug/aizo-project2"
 OUTPUT_FILE = "results/benchmark_B.csv"
@@ -13,41 +15,54 @@ PROBLEMS = [
     2,  # MF
 ]
 
-ALGORITHMS_BY_PROBLEM = {
-    0: [1, 2],  # Prim, Kruskal
-    1: [3, 4],  # Dijkstra, Bellman-Ford
-    2: [5],     # Ford-Fulkerson
-}
 
-STRUCTURES = [
-    1,  # incidenceMatrix
-    2,  # adjacencyList
-]
+def run_command(command: list[str]) -> None:
 
-
-def run_command(command):
     print("Running:", " ".join(command))
-    subprocess.run(command, check=True)
+
+    subprocess.run(
+        command,
+        check=True,
+    )
 
 
-def main():
+def main() -> None:
+    Path(OUTPUT_FILE).parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     for density in DENSITIES:
         for problem in PROBLEMS:
-            for algorithm in ALGORITHMS_BY_PROBLEM[problem]:
-                for structure in STRUCTURES:
-                    command = [
-                        EXECUTABLE,
-                        "--benchmark",
-                        "-p", str(problem),
-                        "-a", str(algorithm),
-                        "-s", str(structure),
-                        "-l", str(VERTEX_COUNT),
-                        "-d", str(density),
-                        "-n", str(ITERATIONS),
-                        "-r", OUTPUT_FILE,
-                    ]
+            command = [
+                EXECUTABLE,
+                "--benchmark",
 
-                    run_command(command)
+                "-p",
+                str(problem),
+
+                # Wszystkie algorytmy dla danego problemu.
+                "-a",
+                "0",
+
+                # Obie reprezentacje.
+                "-s",
+                "0",
+
+                "-l",
+                str(VERTEX_COUNT),
+
+                "-d",
+                str(density),
+
+                "-n",
+                str(ITERATIONS),
+
+                "-r",
+                OUTPUT_FILE,
+            ]
+
+            run_command(command)
 
 
 if __name__ == "__main__":
